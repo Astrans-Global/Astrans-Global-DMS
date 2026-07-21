@@ -40,11 +40,11 @@ Confirm:
 
 ## 3. GitHub repo
 
-Already created and pushed:
+Repo for this DMS:
 
-**https://github.com/Carlin-Fernando/Astrans-Global-DMS**
+**https://github.com/Astrans-Global/Astrans-Global-DMS**
 
-Local `origin` tracks `master`. After you change code:
+Local `origin` should point there. After you change code:
 
 ```powershell
 git add .
@@ -54,8 +54,8 @@ git push
 
 ## 4. Vercel project
 
-1. Go to [https://vercel.com](https://vercel.com) and sign in (same account as Tasks is fine).
-2. **Add New… → Project** → import `Carlin-Fernando/Astrans-Global-DMS`.
+1. Go to [https://vercel.com](https://vercel.com) and sign up/in with the **Astrans-Global** GitHub account.
+2. **Add New… → Project** → import `Astrans-Global/Astrans-Global-DMS`.
 3. Framework: Next.js (auto-detected).
 4. **Environment Variables** — add the same keys as `.env.local`:
    - `NEXT_PUBLIC_SUPABASE_URL`
