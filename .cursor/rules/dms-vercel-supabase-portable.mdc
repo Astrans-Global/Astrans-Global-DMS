@@ -1,0 +1,32 @@
+---
+description: Astrans DMS portable hosting rules — Postgres-first, Vercel/Supabase v1, no Redis workers
+alwaysApply: true
+---
+
+# Astrans Global DMS — portable v1 architecture
+
+## Hosting (current)
+
+- Build and test on **Vercel + Supabase** (same pattern as Astrans Tasks).
+- Do **not** block feature work on Oracle capacity or home PC Coolify.
+- Do **not** introduce paid Oracle Cloud resources (see `oracle-always-free-only.mdc`).
+
+## Data & jobs
+
+- **Postgres-first** for all core DMS state; migrations under `supabase/migrations/`.
+- **No Redis** and no always-on workers in v1.
+- Background work must be **cron-friendly / batched** (short Vercel functions).
+- Do not make Vercel KV/Blob the system of record for inventory/ledger.
+
+## Testing
+
+- Local: `npm run dev` + `.env.local`
+- Remote: Vercel Preview + Production
+- After v1: use `docs/LIMITS_AND_MIGRATION.md` before choosing home PC / VPS
+
+## References
+
+- `docs/ARCHITECTURE.md`
+- `docs/SETUP.md`
+- `docs/BACKUP.md`
+- `docs/LIMITS_AND_MIGRATION.md`
