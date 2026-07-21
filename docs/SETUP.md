@@ -40,24 +40,22 @@ Confirm:
 
 ## 3. GitHub repo
 
-If not already connected:
+Already created and pushed:
 
-1. Create an empty GitHub repo (e.g. `Astrans-Global-DMS`).
-2. From this folder:
+**https://github.com/Carlin-Fernando/Astrans-Global-DMS**
+
+Local `origin` tracks `master`. After you change code:
 
 ```powershell
-git init
 git add .
-git commit -m "Initial Astrans Global DMS skeleton (Vercel + Supabase)"
-git branch -M main
-git remote add origin https://github.com/YOUR_USER/Astrans-Global-DMS.git
-git push -u origin main
+git commit -m "Your message"
+git push
 ```
 
 ## 4. Vercel project
 
 1. Go to [https://vercel.com](https://vercel.com) and sign in (same account as Tasks is fine).
-2. **Add New… → Project** → import the GitHub repo.
+2. **Add New… → Project** → import `Carlin-Fernando/Astrans-Global-DMS`.
 3. Framework: Next.js (auto-detected).
 4. **Environment Variables** — add the same keys as `.env.local`:
    - `NEXT_PUBLIC_SUPABASE_URL`

@@ -2,6 +2,8 @@
 
 Distribution Management System for Astrans.
 
+**Repo:** [Carlin-Fernando/Astrans-Global-DMS](https://github.com/Carlin-Fernando/Astrans-Global-DMS)
+
 **Hosting path (now):** Next.js on **Vercel Hobby** + **Supabase** free tier — same model as Astrans Tasks.  
 **Later:** Measure free-tier usage after v1; stay, upgrade Supabase, or migrate to home PC / VPS + Coolify if needed.
 
