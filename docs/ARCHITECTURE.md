@@ -1,39 +1,41 @@
-# Architecture rules (portable v1)
+# Architecture rules (Astrans Global DMS)
 
-These rules keep Astrans Global DMS easy to move off Vercel/Supabase later (home PC or VPS + Coolify) without a rewrite.
+## Dual-core model (locked)
 
-## Do
+```text
+Astrans DMS (ops)  →  posts events  →  Bigcapital (books + inventory valuation)
+```
 
-1. **Postgres-first** — All core DMS state (inventory ledger, orders, customers, stock movements) lives in PostgreSQL tables/migrations under `supabase/migrations/`.
-2. **Supabase client patterns** — Use `@/lib/supabase/server`, `client`, and `admin` (service role only on the server).
-3. **Next.js App Router** — UI + API routes in `src/app`. Prefer server components + route handlers like Astrans Tasks.
-4. **Cron-friendly jobs** — Background work must finish within Vercel function limits. Use:
-   - Vercel Cron hitting `/api/cron/...`
-   - Or a user-triggered “Run job” button that processes a **batch** and returns quickly
-5. **Env-based config** — No hardcoded project URLs or secrets.
-6. **Code on GitHub** — Source of truth for the program; DB backups are separate (see BACKUP.md).
+Details: [bigcapital/DMS_SCOPE.md](bigcapital/DMS_SCOPE.md) · [bigcapital/EVENT_POSTING_MATRIX.md](bigcapital/EVENT_POSTING_MATRIX.md)
 
-## Do not (v1)
+## Hosting
 
-1. **No Redis** in v1 — no always-on queue workers.
-2. **No long-running route-optimization daemons** — if needed, design as batched/cron chunks or defer until self-hosted.
-3. **No Vercel-only proprietary data stores** as the system of record (KV/Blob OK only as disposable cache, not ledger).
-4. **No paid Oracle Cloud shapes** — see `.cursor/rules/oracle-always-free-only.mdc`. Oracle VM work is paused.
+| Layer | Now | Later |
+|-------|-----|--------|
+| Bigcapital | VirtualBox Ubuntu + Docker/Coolify; Cloudflare Tunnel (`books.astransdms.xyz`) | Dedicated PC, same compose |
+| Coolify UI | `astransdms.xyz` | Same pattern |
+| Astrans DMS Next.js | Develop on Vercel/Supabase or Coolify as needed | Prefer Coolify beside Bigcapital |
+| Oracle Cloud paid shapes | **Forbidden** | Forever forbidden |
 
-## Hosting now vs later
+Bigcapital runtime includes **MySQL/MariaDB + Redis** (+ Gotenberg). That Redis is **only** for the accounting stack on the VM — do not introduce Redis as the DMS system of record.
 
-| Now | Later if limits bite |
-|-----|----------------------|
-| Vercel Hobby | Same Next.js app on Coolify / Node on home PC or VPS |
-| Supabase Postgres | `pg_dump` / restore into self-hosted Postgres |
-| Supabase Auth/Storage | Re-point or migrate with a planned cutover |
+## Accounting / VAT
 
-## Testing while building
+- Currency: **LKR**
+- COA: [bigcapital/CHART_OF_ACCOUNTS.md](bigcapital/CHART_OF_ACCOUNTS.md)
+- VAT decision **1B**: bookkeeping VAT first; Sri Lanka schedules next — [bigcapital/VAT_SL_1B.md](bigcapital/VAT_SL_1B.md)
 
-| Mode | How |
-|------|-----|
-| Local | `npm run dev` + `.env.local` → Supabase |
-| Preview | Vercel Preview URL per push |
-| Production | Vercel production domain for pilots |
+## DMS application rules
 
-No home PC or Oracle VM required to develop or demo.
+1. Ops workflows live in Astrans DMS (routes, vans, collections UX).  
+2. Stock/money truth for books posts into Bigcapital per the event matrix.  
+3. Prefer short/batched integration jobs (no unpaid Oracle Cloud workarounds).  
+4. Secrets in env files only; never commit `.env`.  
+5. Code on GitHub: `Astrans-Global/Astrans-Global-DMS`.
+
+## Do not
+
+1. Rebuild full GL/P&L/BS inside Next.js while Bigcapital is the core.  
+2. Expose MySQL/Redis ports to the public internet.  
+3. Upgrade to paid OCI / non–Always-Free shapes.  
+4. Block go-live books on unfinished RAMIS UI — ship Phase A VAT first.

@@ -4,33 +4,33 @@ Distribution Management System for Astrans.
 
 **Repo:** [Astrans-Global/Astrans-Global-DMS](https://github.com/Astrans-Global/Astrans-Global-DMS)
 
-**Hosting path (now):** Next.js on **Vercel Hobby** + **Supabase** free tier — same model as Astrans Tasks.  
-**Later:** Measure free-tier usage after v1; stay, upgrade Supabase, or migrate to home PC / VPS + Coolify if needed.
+## Architecture (current direction)
 
-## Quick start (local test)
+- **Accounting core:** [Bigcapital](https://github.com/bigcapitalhq/bigcapital) on VirtualBox Ubuntu / Coolify (move to dedicated PC later)  
+- **Ops / DMS:** Astrans app + event postings into Bigcapital  
+- **Edge:** Cloudflare Tunnel (`astransdms.xyz`, planned `books.astransdms.xyz`)  
 
-1. Install deps: `npm install`
-2. Copy env: `copy .env.example .env.local` (Windows) and fill Supabase keys (see [docs/SETUP.md](docs/SETUP.md))
-3. Run: `npm run dev`
-4. Open [http://localhost:3000](http://localhost:3000)
-5. Health check: [http://localhost:3000/api/health](http://localhost:3000/api/health)
+See [docs/bigcapital/README.md](docs/bigcapital/README.md).
 
-## Scripts
+## Quick start (DMS Next.js skeleton)
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Local development |
-| `npm run build` | Production build |
-| `npm run start` | Run production build locally |
-| `npm run lint` | ESLint |
+1. `npm install`  
+2. `copy .env.example .env.local` and fill Supabase keys ([docs/SETUP.md](docs/SETUP.md))  
+3. `npm run dev` → [http://localhost:3000](http://localhost:3000)  
+
+## Bigcapital on the VM
+
+Follow [docs/bigcapital/DEPLOY_COOLIFY.md](docs/bigcapital/DEPLOY_COOLIFY.md) and run [deploy/bigcapital/install-on-vm.sh](deploy/bigcapital/install-on-vm.sh) **on the Ubuntu VM**.
+
+Then configure COA: [docs/bigcapital/CONFIGURE_COA_RUNBOOK.md](docs/bigcapital/CONFIGURE_COA_RUNBOOK.md).
 
 ## Docs
 
-- [docs/SETUP.md](docs/SETUP.md) — Supabase + Vercel wiring
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Portable design rules (Postgres-first, no Redis in v1)
-- [docs/BACKUP.md](docs/BACKUP.md) — Backup habit
-- [docs/LIMITS_AND_MIGRATION.md](docs/LIMITS_AND_MIGRATION.md) — Decision checkpoint after v1
+- [docs/bigcapital/](docs/bigcapital/) — books, COA, deploy, VAT 1B, event matrix, scope  
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — dual-core rules  
+- [docs/SETUP.md](docs/SETUP.md) — Supabase + Vercel (DMS skeleton)  
+- [docs/BACKUP.md](docs/BACKUP.md) — backups  
 
 ## Status
 
-Phase 1 skeleton only (no full DMS features yet). Oracle Always Free VM work is paused (capacity); do not create paid OCI resources.
+Bigcapital-as-core plan artifacts are in-repo. Run the VM install script to bring Bigcapital up, then complete COA/opening balances inside the UI.

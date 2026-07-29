@@ -1,32 +1,30 @@
 ---
-description: Astrans DMS portable hosting rules — Postgres-first, Vercel/Supabase v1, no Redis workers
+description: Astrans DMS dual-core — Bigcapital books on Coolify VM; DMS ops around it; no paid OCI
 alwaysApply: true
 ---
 
-# Astrans Global DMS — portable v1 architecture
+# Astrans Global DMS — dual-core rules
 
-## Hosting (current)
+## Accounting
 
-- Build and test on **Vercel + Supabase** (same pattern as Astrans Tasks).
-- Do **not** block feature work on Oracle capacity or home PC Coolify.
-- Do **not** introduce paid Oracle Cloud resources (see `oracle-always-free-only.mdc`).
+- **Bigcapital** is the accounting/inventory valuation core (self-hosted Docker on VirtualBox now → dedicated PC later).
+- Recreate Astrans COA from `docs/bigcapital/CHART_OF_ACCOUNTS.md`.
+- VAT decision **1B**: bookkeeping VAT first; Sri Lanka schedules in `docs/bigcapital/VAT_SL_1B.md`.
+- DMS stock/money events post per `docs/bigcapital/EVENT_POSTING_MATRIX.md`.
 
-## Data & jobs
+## Ops DMS
 
-- **Postgres-first** for all core DMS state; migrations under `supabase/migrations/`.
-- **No Redis** and no always-on workers in v1.
-- Background work must be **cron-friendly / batched** (short Vercel functions).
-- Do not make Vercel KV/Blob the system of record for inventory/ledger.
+- Distribution workflows (routes, vans, collections UX) live in Astrans DMS, not rebuilt GL screens.
+- Do not rebuild Trial Balance / Balance Sheet / P&L in Next.js while Bigcapital is core.
 
-## Testing
+## Hosting
 
-- Local: `npm run dev` + `.env.local`
-- Remote: Vercel Preview + Production
-- After v1: use `docs/LIMITS_AND_MIGRATION.md` before choosing home PC / VPS
+- Coolify + Cloudflare Tunnel on home/VirtualBox Ubuntu is expected for Bigcapital.
+- **Never** recommend paid Oracle Cloud shapes (`oracle-always-free-only.mdc`).
+- Bigcapital’s Redis/MySQL stay private on the VM — not public.
 
 ## References
 
+- `docs/bigcapital/README.md`
 - `docs/ARCHITECTURE.md`
-- `docs/SETUP.md`
-- `docs/BACKUP.md`
-- `docs/LIMITS_AND_MIGRATION.md`
+- `docs/bigcapital/DEPLOY_COOLIFY.md`

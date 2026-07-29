@@ -1,0 +1,21 @@
+code,account_name,debit,credit,notes
+1100,Motor Vehicle - Toyota Corolla,,,from cutover TB/BS
+1500,Inventory Asset,,,must match stock count
+1600,Account Receivable,,,
+1700,Staff Loan,,,
+1800,WHT Receivable,,,
+1810,VAT Paid (Input VAT),,,
+1900,Hatton National Bank - 34375,,,
+1910,Nations Trust Bank - 200070264082,,,
+1920,Peoples Bank,,,
+1930,Seylan Bank,,,
+1940,Petty cash Lahiru,,,
+2100,Account Payables,,,
+2200,Director Current Account - Nimanda,,,
+2210,Director Current Account - Ravindu Nimans,,,
+2300,VAT Control Account,,,
+3100,Share Capital - Nimanda,,,
+3110,Share Capital - Ravindu Nimans,,,
+3120,Share Capital - Sisira,,,
+3200,Retained Earnings,,,include prior P&L if needed
+,,,,TOTAL debits must equal TOTAL credits
