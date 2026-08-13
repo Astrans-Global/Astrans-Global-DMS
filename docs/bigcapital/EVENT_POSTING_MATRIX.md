@@ -6,7 +6,7 @@ Every row is an **event ledger** posting: stock and/or money effects.
 
 | # | DMS operational event | Stock effect | Money / GL effect | Bigcapital document / posting |
 |---|----------------------|--------------|-------------------|-------------------------------|
-| 1 | Sale confirmed (order → invoice) | Decrease inventory (if stock item) | Dr AR; Cr Sales; Cr VAT Control (output); Dr COGS; Cr Inventory | Sales Invoice (+ inventory COGS) |
+| 1 | Sale confirmed (order → invoice) | Decrease inventory (if stock item) | Dr AR (what customer owes); Cr Sales / Inventory / COGS at **lot cost**; Cr VAT Control (output); Dr/Cr **4410 Selling price variance** = Secondary P&L | Sales Invoice (+ inventory COGS) |
 | 2 | Customer collection received | None | Dr Bank/Cash; Cr AR | Customer payment / receive payment |
 | 3 | Purchase / GRN + supplier bill | Increase inventory | Dr Inventory (or Expense); Dr VAT Paid/input; Cr AP | Purchase bill / bill + inventory receipt |
 | 4 | Supplier payment made | None | Dr AP; Cr Bank/Cash | Vendor payment |

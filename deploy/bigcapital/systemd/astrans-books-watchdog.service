@@ -1,0 +1,8 @@
+[Unit]
+Description=Astrans Books health watchdog (tunnel + Bigcapital)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/astrans-books-watchdog.sh

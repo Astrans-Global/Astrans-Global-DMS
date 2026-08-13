@@ -1,0 +1,96 @@
+<!doctype html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicons/favicon-32.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0B3D5C" />
+    <meta name="description" content="Astrans financial management" />
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Astrans Global DMS</title>
+    <script>
+      (function () {
+        try {
+          var t =
+            localStorage.getItem("theme") ||
+            (window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light");
+          if (t === "dark") document.documentElement.classList.add("bp4-dark");
+          else document.documentElement.classList.remove("bp4-dark");
+        } catch (e) {}
+      })();
+    </script>
+
+    <style>
+      /* Pre-paint: hide stock Bigcapital marks until Astrans inject replaces them. */
+      [data-icon="bigcapital"],
+      [data-icon="bigcapital-alt"],
+      [data-icon="mini-bigcapital"],
+      .bp4-icon-bigcapital,
+      .bp4-icon-bigcapital-alt,
+      .bp4-icon-mini-bigcapital,
+      .bigcapital-logo {
+        opacity: 0 !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+      }
+      /* Auth route: hide stock wordmark SVGs before inject chrome mounts. */
+      html.astrans-on-auth [data-icon="bigcapital"],
+      html.astrans-on-auth [data-icon="bigcapital-alt"],
+      html.astrans-on-auth [data-icon="mini-bigcapital"],
+      html.astrans-on-auth .bp4-icon-bigcapital,
+      html.astrans-on-auth .bp4-icon-bigcapital-alt,
+      html.astrans-on-auth .bp4-icon-mini-bigcapital,
+      html.astrans-on-auth .bigcapital-logo,
+      html.astrans-on-auth svg[viewBox="0 0 214 37"],
+      html.astrans-on-auth svg[viewBox="0 0 215 38"] {
+        display: none !important;
+      }
+    </style>
+    <script>
+      /* Sync: mark /auth before first paint; unregister legacy SW. No DOM chrome here. */
+      (function () {
+        try {
+          if (location.pathname.indexOf('/auth') === 0) {
+            document.documentElement.classList.add('astrans-on-auth');
+          }
+        } catch (e) {}
+        try {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations()
+              .then(function (rs) { rs.forEach(function (r) { r.unregister(); }); })
+              .catch(function () {});
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <script src="/brand/astrans-inject-1786614523.js?v=1786614523" defer></script>
+    <script type="module" crossorigin src="/assets/index-C4jBpDeP.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-WIyr6BOV.css">
+  </head>
+  <body>
+    <script>
+      (function () {
+        try {
+          var t =
+            localStorage.getItem("theme") ||
+            (window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light");
+          if (t === "dark") document.body.classList.add("bp4-dark");
+          else document.body.classList.remove("bp4-dark");
+        } catch (e) {}
+      })();
+    </script>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <div id="nprogress"></div>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+[Unit]
+Description=Astrans Bigcapital (Books) stack
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/bigcapital
+ExecStart=/usr/bin/docker compose --file docker-compose.prod.yml --file docker-compose.minio.yml --file docker-compose.webapp-patch.yml --file docker-compose.server-patch.yml --file docker-compose.restart.yml --file branding/docker-compose.branding.yml up -d
+ExecStop=/usr/bin/docker compose --file docker-compose.prod.yml --file docker-compose.minio.yml --file docker-compose.webapp-patch.yml --file docker-compose.server-patch.yml --file docker-compose.restart.yml --file branding/docker-compose.branding.yml stop
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

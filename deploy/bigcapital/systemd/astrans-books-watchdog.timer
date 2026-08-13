@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Astrans Books watchdog every 2 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=30s
+Persistent=true
+Unit=astrans-books-watchdog.service
+
+[Install]
+WantedBy=timers.target

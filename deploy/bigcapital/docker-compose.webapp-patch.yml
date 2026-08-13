@@ -1,0 +1,19 @@
+services:
+  webapp:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./patches/webapp-nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./patches/webapp-nginx/00-astrans-map.conf:/etc/nginx/conf.d/00-astrans-map.conf:ro
+      # Bridge camelCase org metadata -> snake_case form defaults (Preferences).
+      # Do NOT add ?v= to this file in index.html.
+      - ./patches/webapp-assets/index-C4jBpDeP.js:/usr/share/nginx/html/assets/index-C4jBpDeP.js:ro
+      # Edit-user dialog: wait for user/roles before Formik (stock crashes empty).
+      - ./patches/webapp-assets/UserFormDialogContent-B7F4JkNA.js:/usr/share/nginx/html/assets/UserFormDialogContent-B7F4JkNA.js:ro
+      - ./patches/webapp-assets/AuthenticationPage-ChWNzyET.js:/usr/share/nginx/html/assets/AuthenticationPage-ChWNzyET.js:ro
+      # Quick Find: stock typo L.CUSTOMR + unguarded _E(data.items) blanks the SPA on type.
+      # astrans-qf1 filename + index import rewrite busts Cloudflare HIT on the stock hash.
+      - ./patches/webapp-assets/PrivatePages-H5aUufvf.js:/usr/share/nginx/html/assets/PrivatePages-H5aUufvf.js:ro
+      - ./patches/webapp-assets/PrivatePages-H5aUufvf.astrans-qf1.js:/usr/share/nginx/html/assets/PrivatePages-H5aUufvf.astrans-qf1.js:ro
+      # Aging/comparison reports: map snake_case financial table columns.
+      - ./patches/webapp-assets/dynamicColumns-YeaCR-J-.js:/usr/share/nginx/html/assets/dynamicColumns-YeaCR-J-.js:ro

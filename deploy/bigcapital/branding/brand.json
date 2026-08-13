@@ -1,0 +1,14 @@
+{
+  "productName": "Astrans",
+  "productNameFull": "Astrans Global DMS",
+  "description": "Astrans financial management",
+  "themeColor": "#0B3D5C",
+  "logo": {
+    "white": "logos/logo-white.png",
+    "black": "logos/logo-black.png"
+  },
+  "replaceStrings": [
+    { "from": "Bigcapital", "to": "Astrans" },
+    { "from": "bigcapital", "to": "astrans" }
+  ]
+}

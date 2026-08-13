@@ -85,6 +85,7 @@ Suggested codes are placeholders; renumber to match accountant preference.
 | 4210 | Revenue - Service | Income |
 | 4300 | Interest Income | Income |
 | 4400 | Other Income | Income |
+| 4410 | Selling price variance | Income | Statutory sell-at-lot-cost override (DMS Secondary P&L). Credit = gain, debit = loss. |
 
 ### Cost & expenses
 

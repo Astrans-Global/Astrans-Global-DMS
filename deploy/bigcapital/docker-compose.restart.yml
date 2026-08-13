@@ -1,0 +1,17 @@
+# Ensure Bigcapital long-running services come back after reboot / clean exits.
+# Pair with: docker compose -f docker-compose.prod.yml -f ... -f docker-compose.restart.yml up -d
+services:
+  proxy:
+    restart: unless-stopped
+  webapp:
+    restart: unless-stopped
+  server:
+    restart: unless-stopped
+  mysql:
+    restart: unless-stopped
+  redis:
+    restart: unless-stopped
+  gotenberg:
+    restart: unless-stopped
+  minio:
+    restart: unless-stopped

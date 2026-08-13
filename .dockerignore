@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+deploy/bigcapital
+**/*_tmp*
+**/.env.local
+**/.env
+*.md
+agent-transcripts

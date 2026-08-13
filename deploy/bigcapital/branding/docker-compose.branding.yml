@@ -1,0 +1,13 @@
+# Bind-mount white-label overlays into Bigcapital webapp.
+# Path is relative to /opt/bigcapital when this file is copied to branding/ there.
+services:
+  webapp:
+    volumes:
+      - ./branding/generated/index.html:/usr/share/nginx/html/index.html:ro
+      - ./branding/generated/manifest.json:/usr/share/nginx/html/manifest.json:ro
+      - ./branding/generated/bigcapital.svg:/usr/share/nginx/html/bigcapital.svg:ro
+      - ./branding/generated/logo192.png:/usr/share/nginx/html/logo192.png:ro
+      - ./branding/generated/logo512.png:/usr/share/nginx/html/logo512.png:ro
+      - ./branding/generated/favicon.ico:/usr/share/nginx/html/favicon.ico:ro
+      - ./branding/generated/brand:/usr/share/nginx/html/brand:ro
+      - ./branding/generated/favicons:/usr/share/nginx/html/favicons:ro

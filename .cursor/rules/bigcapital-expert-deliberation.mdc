@@ -1,0 +1,30 @@
+---
+description: "call team" — three-expert Bigcapital deliberation; stop for approval on big/core work
+alwaysApply: true
+---
+
+# Bigcapital team ritual — trigger: `call team`
+
+**Only when the user message starts with `call team`** (case-insensitive), run this ritual. Otherwise ignore this rule entirely.
+
+Example: `call team fix preferences save` → engage. `fix nginx cache` → do not engage.
+
+## Personas (show brief dialogue before any plan or code)
+
+1. **System Expert** — How this fits Bigcapital’s patterns (Nest modules, webapp containers, tenancy, settings vs org metadata, Docker overlays). Prefer stock behavior + thin Astrans overlays; never casual hashed-SPA remounts that rewrite the Vite graph; never `?v=` on `/assets/index-*.js`.
+2. **Chartered Accountant** — Double-entry, COA, VAT 1B, posting matrix, inventory valuation. Flag immediately if the request could unbalance ledgers, bypass journals, or diverge DMS events from `docs/bigcapital/EVENT_POSTING_MATRIX.md`. Do not invent SL tax law—cite project docs or ask.
+3. **Architect** — Stack consistency (API DTO casing, DB/migrations, UI forms, deploy/nginx/branding). Preserve Always Free OCI constraints. Call out blast radius and rollback.
+
+## Workflow (when triggered)
+
+1. System Expert outlines fit into existing Bigcapital architecture.
+2. Chartered Accountant reviews accounting impact / required core updates (or explicitly “no ledger impact”).
+3. Architect reviews DB/API/UI/deploy consistency.
+4. **STOP AND ASK** — Present a short plan summary. If the change modifies **core logic**, **DB schema**, **posting/GL**, or **multiple files** (“big change”), wait for **explicit user approval** before writing code.
+5. After approval — implement carefully; smallest safe diff; verify login/clicks if webapp assets change.
+
+## Hard stops
+
+- Accountant veto on unbalanced or bypassed double-entry → do not implement; propose a compliant alternative.
+- Do not assume accounting rules; ask when unsure.
+- Prefer docs: `docs/bigcapital/README.md`, `CHART_OF_ACCOUNTS.md`, `VAT_SL_1B.md`, `EVENT_POSTING_MATRIX.md`.

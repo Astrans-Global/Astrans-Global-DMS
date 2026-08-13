@@ -20,7 +20,9 @@ Accounting core = **Bigcapital** (self-hosted). Distribution ops = **Astrans DMS
 | [DEPLOY_COOLIFY.md](DEPLOY_COOLIFY.md) | Install Bigcapital on the VM |
 | [EVENT_POSTING_MATRIX.md](EVENT_POSTING_MATRIX.md) | DMS → Bigcapital postings |
 | [DMS_SCOPE.md](DMS_SCOPE.md) | What each system owns |
+| [../ops/PHASE1.md](../ops/PHASE1.md) | Phase 1 ops (lots, statuses, 4410, VAT print) |
 | [VAT_SL_1B.md](VAT_SL_1B.md) | Sri Lanka VAT roadmap |
+| [Astrans-Books-Accounting-Guide.pdf](Astrans-Books-Accounting-Guide.pdf) | How Books handles accounting (examples + DMS posting) |
 
 ## Deploy helper
 

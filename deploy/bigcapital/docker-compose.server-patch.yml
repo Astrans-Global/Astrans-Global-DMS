@@ -1,0 +1,21 @@
+services:
+  server:
+    volumes:
+      - ./patches/server/AuthResetPassword.service.js:/app/packages/server/dist/modules/Auth/commands/AuthResetPassword.service.js:ro
+      - ./patches/server-mail/AuthMailMessages.esrvice.js:/app/packages/server/dist/modules/Auth/AuthMailMessages.esrvice.js:ro
+      - ./patches/server-mail/SendInviteUsersMailMessage.service.js:/app/packages/server/dist/modules/UsersModule/commands/SendInviteUsersMailMessage.service.js:ro
+      - ./patches/server-mail/ResetPassword.html:/app/packages/server/static/mail/ResetPassword.html:ro
+      - ./patches/server-mail/SignupVerifyEmail.html:/app/packages/server/static/mail/SignupVerifyEmail.html:ro
+      - ./patches/server-mail/UserInvite.html:/app/packages/server/static/mail/UserInvite.html:ro
+      - ./patches/server-mail/bigcapital.png:/app/packages/server/static/images/bigcapital.png:ro
+      - ./patches/server/AstransOps/astransOpsExtras.js:/app/packages/server/dist/modules/AstransOps/astransOpsExtras.js:ro
+      - ./patches/server/CreateItem.service.js:/app/packages/server/dist/modules/Items/CreateItem.service.js:ro
+      - ./patches/server/EditItem.service.js:/app/packages/server/dist/modules/Items/EditItem.service.js:ro
+      - ./patches/server/GetItem.service.js:/app/packages/server/dist/modules/Items/GetItem.service.js:ro
+      - ./patches/server/Item.dto.js:/app/packages/server/dist/modules/Items/dtos/Item.dto.js:ro
+      - ./patches/server/Item.schema.js:/app/packages/server/dist/modules/Items/Item.schema.js:ro
+      - ./patches/server/CreateCustomer.service.js:/app/packages/server/dist/modules/Customers/commands/CreateCustomer.service.js:ro
+      - ./patches/server/EditCustomer.service.js:/app/packages/server/dist/modules/Customers/commands/EditCustomer.service.js:ro
+      - ./patches/server/GetCustomer.service.js:/app/packages/server/dist/modules/Customers/queries/GetCustomer.service.js:ro
+      - ./patches/server/CreateCustomer.dto.js:/app/packages/server/dist/modules/Customers/dtos/CreateCustomer.dto.js:ro
+      - ./patches/server/EditCustomer.dto.js:/app/packages/server/dist/modules/Customers/dtos/EditCustomer.dto.js:ro
