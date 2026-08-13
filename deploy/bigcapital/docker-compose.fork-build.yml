@@ -1,0 +1,27 @@
+# Build server/webapp images from our Bigcapital source fork instead of pulling
+# bigcapitalhq/{server,webapp}:latest. Compose with the other prod overlays:
+#
+#   docker compose \
+#     -f docker-compose.prod.yml \
+#     -f docker-compose.restart.yml \
+#     -f docker-compose.fork-build.yml \
+#     -f branding/docker-compose.branding.yml \
+#     up -d --build
+#
+# BIGCAPITAL_SRC must point at a checkout of Astrans-Global/bigcapital on the
+# `astrans-main` branch (see fork-pipeline docs in docs/bigcapital/README.md).
+# Once this is up and verified, the old runtime patch overlays
+# (docker-compose.server-patch.yml, docker-compose.webapp-patch.yml) should be
+# dropped from the compose command — their fixes now live in source.
+services:
+  server:
+    build:
+      context: ${BIGCAPITAL_SRC:-./bigcapital-src}
+      dockerfile: packages/server/Dockerfile
+    image: astrans/bigcapital-server:local
+
+  webapp:
+    build:
+      context: ${BIGCAPITAL_SRC:-./bigcapital-src}
+      dockerfile: packages/webapp/Dockerfile
+    image: astrans/bigcapital-webapp:local
