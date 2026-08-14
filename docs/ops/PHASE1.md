@@ -106,6 +106,21 @@ Pending / Reserved / Invoiced: **no GL**.
 
 Max **10** item rows. Editable until Delivered. After Delivered, phase 1 allows reverse+repost; hard lock after payment + bank rec is **phase 2**.
 
+Implemented (server): `sales_invoices.dms_status` column (own field, layered
+on top of Bigcapital's native `delivered_at`, which still gates GL/inventory
+posting), `item_price_lot_reservations` table (mirrors
+`item_price_lot_receipts` for the sell side), `InvoiceLotReservationService`
+(reserve/release/consume, blocks oversell against a lot's `float_qty`),
+`InvoiceDmsStatusService` + `PUT /api/sale-invoices/:id/dms-status`
+(Reserved/Invoiced hold stock via reservations; Delivered drives Bigcapital's
+own native deliver action so GL/inventory post exactly as they already do),
+`InvoiceLotReservationSyncSubscriber` (keeps reservations/`dms_status` in
+sync on invoice edit/delete/native-deliver). Implemented (webapp): a
+"Status" pill + "Move to..." menu on the invoice form and a DMS Status
+column on the invoice list, both wired to that endpoint. Invoice numbering
+still uses Bigcapital's normal auto-numbering for now (per-area format is a
+separate later task).
+
 ## Lots / GRN
 
 Line: VAT-excl list price, line discount %. Optional bill-header extra
@@ -119,9 +134,17 @@ Each lot: `real_qty`, `reserved_qty`, `float_qty = real − reserved`.
 Implemented (server): `item_price_lots` + `item_price_lot_receipts` tables,
 `ComputeItemPriceLotCost.ts`, `RecordItemPriceLotsFromBillService`
 (subscribes to Bill create/edit/delete events), `GET /api/item-price-lots`
-read endpoint. Also `bill_vat_records` (see "VAT" above) via
-`RecordBillVatFromBillService`, same event set. Pending: invoice-side lot
-picker (`invoice-lot-picker` task).
+read endpoint (`item_id`/`warehouse_id`/`exclude_invoice_id` filters — the
+last adds an invoice's own active holds back into `float_qty` so re-opening
+it doesn't look more constrained than it really is). Also `bill_vat_records`
+(see "VAT" above) via `RecordBillVatFromBillService`, same event set.
+
+Implemented (webapp): invoice-line price-lot picker (`ItemsEntriesTable`
+gains an opt-in "Price lot" column, invoices-only via `enablePriceLots`;
+picking a lot fills in that line's price/discount from the lot's own values,
+still editable after, and records `item_price_lot_id` on the line). Picker
+and stock-hold quantities are scoped to the invoice's own selected
+warehouse.
 
 ## Customers
 
