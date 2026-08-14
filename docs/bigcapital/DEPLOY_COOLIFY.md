@@ -1,7 +1,8 @@
 # Deploy Bigcapital on Coolify (VirtualBox Ubuntu)
 
 Host now: **Oracle VirtualBox** Ubuntu + Coolify (tunnel `astransdms.xyz`).  
-Later: move same Docker stack to a dedicated PC.
+Later: move same Docker stack to a dedicated PC — see
+[MIGRATE_TO_DEDICATED_PC.md](MIGRATE_TO_DEDICATED_PC.md) for the plan.
 
 Official docs: [Docker deployment](https://docs.bigcapital.app/deployment/docker) · [Setup script](https://docs.bigcapital.app/deployment/setup-script)
 

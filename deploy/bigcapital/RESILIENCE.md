@@ -17,12 +17,13 @@ Install once on the Ubuntu VM (see `install-resilience.sh`):
 | Piece | Role |
 |--------|------|
 | `docker-compose.restart.yml` | `restart: unless-stopped` on all long-running services |
-| `branding/docker-compose.branding.yml` | White-label tab/favicon/login marks (see `branding/README.md`) |
-| `bigcapital.service` | `docker compose up -d` on boot |
-| `astrans-books-watchdog.timer` | Every 2 minutes: fix DNS file if missing, restart tunnel if down, compose up if `:8088` unhealthy |
+| `docker-compose.fork-build.yml` | Branded fork images (`astrans/bigcapital-{server,webapp}:local`) — branding/subcategory/pack-size/bug-fixes live in source now, not runtime overlays |
+| `bigcapital.service` | `docker compose up -d` on boot — **must** include `docker-compose.fork-build.yml` and have `BIGCAPITAL_SRC` set as an absolute path in `.env`, or it fails atomically and takes the whole stack down (see `docs/bigcapital/MIGRATE_TO_DEDICATED_PC.md`) |
+| `astrans-books-watchdog.timer` | Every 2 minutes: fix DNS file if missing, restart tunnel if down, compose up if `:8088` unhealthy — **must** use the same file list as `bigcapital.service` (fork-build.yml), or a health blip silently reverts to stock unbranded images |
 | `/etc/systemd/resolved.conf.d/astrans-dns.conf` | Prefer `1.1.1.1` / `8.8.8.8` over flaky router DNS |
 | `systemd/cloudflared-override.conf` | Force tunnel `http2` (QUIC flaps through VirtualBox NAT) + `Restart=always` |
-| `docker-compose.webapp-patch.yml` | **Nginx only** (cache/SW). Do not remount hashed `index`/`PrivatePages`/`UserForm` SPA chunks |
+
+The old `docker-compose.webapp-patch.yml` / `docker-compose.server-patch.yml` / `branding/docker-compose.branding.yml` runtime overlays are **retired** — do not add them back to `bigcapital.service` or the watchdog script. Their fixes and branding now live natively in the `Astrans-Global/bigcapital` fork source (`astrans-main` branch).
 
 ## Reboot checklist (verified 2026-08-07: public branded login back in ~80s)
 

@@ -4,13 +4,15 @@
 set -euo pipefail
 
 COMPOSE_DIR="${BIGCAPITAL_DIR:-/opt/bigcapital}"
+# Must match the fork-build overlay used by bigcapital.service, or a health
+# blip here silently recreates server/webapp on stock bigcapitalhq/*:latest
+# images instead of our branded astrans/*:local fork builds. See
+# docs/bigcapital/MIGRATE_TO_DEDICATED_PC.md for the incident writeup.
 COMPOSE_FILES=(
   --file docker-compose.prod.yml
   --file docker-compose.minio.yml
-  --file docker-compose.webapp-patch.yml
-  --file docker-compose.server-patch.yml
+  --file docker-compose.fork-build.yml
   --file docker-compose.restart.yml
-  --file branding/docker-compose.branding.yml
 )
 LOG_TAG="astrans-books-watchdog"
 BOOKS_URL="${BOOKS_HEALTH_URL:-http://127.0.0.1:8088/}"

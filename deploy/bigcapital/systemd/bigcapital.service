@@ -8,8 +8,14 @@ Requires=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/opt/bigcapital
-ExecStart=/usr/bin/docker compose --file docker-compose.prod.yml --file docker-compose.minio.yml --file docker-compose.webapp-patch.yml --file docker-compose.server-patch.yml --file docker-compose.restart.yml --file branding/docker-compose.branding.yml up -d
-ExecStop=/usr/bin/docker compose --file docker-compose.prod.yml --file docker-compose.minio.yml --file docker-compose.webapp-patch.yml --file docker-compose.server-patch.yml --file docker-compose.restart.yml --file branding/docker-compose.branding.yml stop
+# BIGCAPITAL_SRC must be set to an ABSOLUTE path in /opt/bigcapital/.env
+# (e.g. /home/astrans/bigcapital-src). docker-compose.fork-build.yml falls
+# back to the relative "./bigcapital-src" otherwise, which does not exist
+# under /opt/bigcapital and fails this whole command atomically -- taking
+# down every container in the stack, not just server/webapp. See
+# docs/bigcapital/MIGRATE_TO_DEDICATED_PC.md for the incident writeup.
+ExecStart=/usr/bin/docker compose --file docker-compose.prod.yml --file docker-compose.minio.yml --file docker-compose.fork-build.yml --file docker-compose.restart.yml up -d
+ExecStop=/usr/bin/docker compose --file docker-compose.prod.yml --file docker-compose.minio.yml --file docker-compose.fork-build.yml --file docker-compose.restart.yml stop
 TimeoutStartSec=300
 
 [Install]

@@ -18,6 +18,8 @@ Details: [bigcapital/DMS_SCOPE.md](bigcapital/DMS_SCOPE.md) · [bigcapital/EVENT
 
 Bigcapital runtime includes **MySQL/MariaDB + Redis** (+ Gotenberg for PDF rendering). Redis/MySQL stay private on the VM, never exposed publicly.
 
+The "Later" move to a dedicated PC is a locked decision, not just an aspiration — the laptop VM has had reboot-instability incidents (see [bigcapital/MIGRATE_TO_DEDICATED_PC.md](bigcapital/MIGRATE_TO_DEDICATED_PC.md) for the trigger criteria and step-by-step cutover plan).
+
 ## Accounting / VAT
 
 - Currency: **LKR**
