@@ -148,7 +148,58 @@ warehouse.
 
 ## Customers
 
-Start **Category B**. A–D engine needs **cleared** payments (not PDC received). Phase 1: status stays B unless a test “mark settled (cleared)” stub is used. Unpaid delivered invoices show on the invoice screen.
+Start **Category B** (`risk_category`, default `B`, one of A/B/C/D). A–D engine
+needs **cleared** payments (not PDC received). Phase 1: status stays B unless
+a test "mark settled (cleared)" stub is used. Unpaid delivered invoices show
+on the invoice screen.
+
+### Areas & Route Cities
+
+New taxonomies, same pattern as Item Categories/Subcategories (own list page
++ dialog, quick "+ create" from any select that uses them):
+
+- **Area**: `name` (unique), `invoice_number_code` (2 letters/digits, unique —
+  the `QQ` in `YYMMM_ASTRANSQQ_XXXXX`, stored now for later invoice-numbering
+  wiring), `next_invoice_number` (default `10001`, stored now, not yet
+  consumed). Managed at Contacts → Areas.
+- **Route City**: `name`, belongs to exactly one **Area** (`area_id`), unique
+  per area. Managed at Contacts → Route Cities; the customer form's Route
+  City dropdown is filtered to the currently-selected Area and resets
+  whenever the Area changes.
+- Both are **required** fields on every customer (Area first, then Route
+  City). A route city can't be assigned to a customer under a different area
+  than its own (server-side consistency check).
+- Deleting an Area/Route City is blocked while it still has route
+  cities/customers attached.
+
+Implemented (server): `customer_areas` + `customer_route_cities` tables,
+`CustomerAreaModule` / `CustomerRouteCityModule` (full CRUD, uniqueness +
+dependency validation), `contacts.area_id` / `contacts.route_city_id` foreign
+keys. Implemented (webapp): `CustomerAreasList` / `CustomerRouteCitiesList`
+pages + form dialogs, `CustomerAreaSelect` / `CustomerRouteCitySelect`
+cascading dropdowns (with inline "+ create" like the Tax Rate picker), wired
+into the customer form.
+
+### Extended customer profile
+
+Added directly to the existing `contacts` table (customers and vendors share
+it, but these fields are customer-facing only for now):
+
+- **Call Name** — this *is* Bigcapital's existing `display_name` field, just
+  relabelled on the customer form/list (the name that prints on invoices).
+- **Contact Person** — single free-text name field (optional).
+- **Phone 1 / Phone 2** — Bigcapital's existing `work_phone` / `personal_phone`
+  fields, relabelled (both optional).
+- **VAT / TIN Number** (`tin_number`) — optional, must be exactly 9 digits
+  when provided; also determines VAT vs non-VAT invoice printing (see "VAT"
+  above).
+- **Address line 3** (`billing_address3` / `shipping_address3`) — third line
+  added alongside Bigcapital's existing address line 1/2 fields, both
+  billing and shipping.
+
+No backfill was needed — the customers list was empty at rollout time, so
+Area/Route City are enforced as required from the very first customer
+created.
 
 ## Books adapter
 
