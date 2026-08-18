@@ -35,23 +35,43 @@ command; their fixes (branding, mail templates, item/subcategory fields) now
 live natively in the fork's source. Phase 1 features still being built
 (lots, invoice workflow, Secondary P&L, etc.) are added directly to the fork.
 
-To rebuild and redeploy after pulling new fork commits:
+To rebuild and redeploy after pulling new fork commits, run the one
+canonical deploy script (from Windows, VM reachable at `127.0.0.1:2222`):
+
+```bat
+python deploy\bigcapital\deploy-fork.py
+```
+
+It pulls `astrans-main`, rebuilds both images, recreates `server`+`webapp`
+with the correct file list (**never** `branding/docker-compose.branding.yml`
+— see "Gotcha" below), and self-checks that every asset the served
+`index.html` references actually returns HTTP 200. If your fork commit adds
+a tenant migration, run that manually first:
 
 ```bash
-cd ~/bigcapital-src && git pull origin astrans-main
-docker build -f packages/server/Dockerfile -t astrans/bigcapital-server:local .
-docker build -f packages/webapp/Dockerfile -t astrans/bigcapital-webapp:local .
+ssh -p 2222 astrans@127.0.0.1
 cd /opt/bigcapital
-# Apply any new tenant migrations first (safe/additive, review before running on real data):
 docker compose -f docker-compose.prod.yml -f docker-compose.minio.yml \
   -f docker-compose.restart.yml -f docker-compose.fork-build.yml \
   run --rm --no-deps server node packages/server/dist/cli.js tenants:migrate:latest
-# Then recreate server/webapp with the new images:
-docker compose -f docker-compose.prod.yml -f docker-compose.minio.yml \
-  -f docker-compose.restart.yml -f docker-compose.fork-build.yml \
-  up -d --no-build
 ```
 
 `docker-compose.server-patch.yml` and `docker-compose.webapp-patch.yml` (and the
 `branding/` folder) are kept in this repo only as historical reference — they are
 no longer part of the live compose command.
+
+### Gotcha (2026-08-18 incident): never re-add `branding/docker-compose.branding.yml`
+
+That overlay bind-mounts a stale, hand-generated `index.html` (and
+`/brand/*`, `/favicons/*`, `manifest.json`) over whatever the freshly built
+webapp image already serves natively. It's fully redundant now — branding
+is baked directly into the fork source (`packages/webapp/index.html` +
+`packages/webapp/public/*`) and comes out correct, with fresh content
+hashes, on every single build. Re-adding the overlay "to fix branding"
+instead **shadows** that correct file with an old one still pointing at
+the *previous* build's JS/CSS hash filenames — those files no longer exist
+after a rebuild, the main bundle 404s, and the whole app renders as a
+blank page. This happened for real on 2026-08-18 (someone's ad-hoc deploy
+command included the overlay "just in case"); use `deploy-fork.py` instead
+of retyping the compose command from memory, precisely to stop this from
+happening again.
