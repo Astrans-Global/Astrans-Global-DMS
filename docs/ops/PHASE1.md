@@ -43,18 +43,26 @@ footer.
 Worklist screen for what still needs to go out on the vans -- **not** a
 report on finished sales (that's Secondary P&L above, Delivered-only); this
 one defaults to showing **Pending + Reserved** invoices (the ones not yet
-out the door) and lets you also tick in Invoiced/Delivered if you need them.
+out the door) and lets you also tick in Invoiced if you need it. **Delivered
+invoices never show here, full stop** -- they've already gone out, there's
+nothing left to prep, so "Delivered" isn't even offered as a Status
+tick-box option, and the server excludes `dmsStatus = 'delivered'`
+unconditionally (not just "whenever the Status filter happens to leave it
+unticked"). This also excludes pre-Phase-1 invoices with no `dmsStatus` set
+at all, since those are treated as already-Delivered (see "Status
+pipeline" below, "Existing invoices").
 Read-only: ticking invoices here has zero effect on their status, stock, or
 the ledger -- it only feeds the totals panel below the table so warehouse
 staff can see how many of each item (and total litres) to pull for whatever
 they've ticked.
 
 Filters: Warehouse (single-pick), Area (single-pick), Route City (tick-box,
-pick any number), Status (tick-box, pick any number, defaults to
-Pending+Reserved ticked), invoice date range. Route City's option list
-narrows to the selected Area's cities once an Area is picked (same
-cascading behaviour as the customer form), and ticked Route Cities are
-cleared whenever the Area changes since they'd no longer make sense.
+pick any number), Status (tick-box: Pending/Reserved/Invoiced only, pick any
+number, defaults to Pending+Reserved ticked), invoice date range. Route
+City's option list narrows to the selected Area's cities once an Area is
+picked (same cascading behaviour as the customer form), and ticked Route
+Cities are cleared whenever the Area changes since they'd no longer make
+sense.
 
 Totals panel: quantity per item across every currently-ticked invoice, plus
 each item's litres (`quantity × item.pack_size_litres` -- items with no
