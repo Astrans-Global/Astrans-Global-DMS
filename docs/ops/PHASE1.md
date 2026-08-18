@@ -38,6 +38,45 @@ customer, and the customer's area). Implemented (webapp): Reports → Astrans
 DMS → Secondary P&L page (`SecondaryPnl.tsx`), green/red P&L cells, totals
 footer.
 
+## Delivery Prep
+
+Worklist screen for what still needs to go out on the vans -- **not** a
+report on finished sales (that's Secondary P&L above, Delivered-only); this
+one defaults to showing **Pending + Reserved** invoices (the ones not yet
+out the door) and lets you also tick in Invoiced/Delivered if you need them.
+Read-only: ticking invoices here has zero effect on their status, stock, or
+the ledger -- it only feeds the totals panel below the table so warehouse
+staff can see how many of each item (and total litres) to pull for whatever
+they've ticked.
+
+Filters: Warehouse (single-pick), Area (single-pick), Route City (tick-box,
+pick any number), Status (tick-box, pick any number, defaults to
+Pending+Reserved ticked), invoice date range. Route City's option list
+narrows to the selected Area's cities once an Area is picked (same
+cascading behaviour as the customer form), and ticked Route Cities are
+cleared whenever the Area changes since they'd no longer make sense.
+
+Totals panel: quantity per item across every currently-ticked invoice, plus
+each item's litres (`quantity × item.pack_size_litres` -- items with no
+pack size set still count toward quantity, just not litres) and a grand
+total litres figure. Recalculates live as tick-boxes change; nothing is
+saved.
+
+Implemented (server): `GET /api/delivery-prep/invoices` (filters:
+`warehouseId`, `areaId`, `routeCityId` comma-list, `dmsStatus` comma-list,
+`dateFrom`, `dateTo` -- joins `sales_invoices` to `contacts`,
+`customer_areas`, `customer_route_cities`, `warehouses`; read-only, no new
+tables), `GET /api/delivery-prep/totals?invoiceIds=1,2,3` (sums
+`items_entries.quantity` grouped by item for the given invoice ids,
+multiplies by `items.pack_size_litres` for the litres figure).
+Implemented (webapp): Sales → Delivery Prep (`DeliveryPrep.tsx`), route
+`/delivery-prep`; the Route City / Status tick-box dropdowns are a small
+reusable `CheckboxMultiSelectFilter` (a `Popover` + `Menu` of `MenuItem`s
+with `shouldDismissPopover={false}` so ticking one option doesn't close the
+dropdown) in `DeliveryPrep/components.tsx`; the invoice table uses the
+existing `DataTable` `selectionColumn` tick-box-column feature (also used by
+the Invoices list's bulk-select) rather than anything new.
+
 ## Statutory posting (Delivered)
 
 Customer owes **sell** amount. Inventory leaves at **lot** cost. Difference cannot vanish.
