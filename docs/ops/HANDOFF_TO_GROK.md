@@ -210,11 +210,13 @@ shifted):
 
 - **Customer risk category engine** — A/B/C/D categories that
   auto-upgrade/downgrade based on payment timing.
-- **Warehouse inventory report** — real vs. float stock balance, broken
-  down per item price-lot, with total litres and value, exportable.
 - **VAT / Non-VAT invoice PDF & Excel print formats** matching the user's
   sample files (ask the user for those samples again if you don't have
   them in context — don't guess the layout).
+
+Warehouse inventory report was built after this handoff (Reports →
+Astrans DMS → Warehouse Inventory) — see `docs/ops/PHASE1.md`
+("Warehouse inventory").
 
 ## 7. If you're not sure
 

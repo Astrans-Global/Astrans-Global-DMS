@@ -85,6 +85,38 @@ dropdown) in `DeliveryPrep/components.tsx`; the invoice table uses the
 existing `DataTable` `selectionColumn` tick-box-column feature (also used by
 the Invoices list's bulk-select) rather than anything new.
 
+## Warehouse inventory
+
+One row per **item price-lot** (not per item): warehouse, item, list
+price / discount % / VAT %, VAT-inclusive lot cost, real qty, reserved
+qty, invoiced qty, float qty, litres (`real qty × pack_size_litres`), and
+value (`lot cost × real qty` -- VAT-inclusive, same unit cost as COGS).
+Lots with **zero** real qty still show by default; tick "Hide lots with
+zero stock" to drop them.
+
+Float on this report is a **view choice**, it does not change how the
+invoice picker blocks oversell (that still uses the lot's own
+`reserved_qty`, which already holds both Reserved **and** Invoiced
+invoices together -- see "Status pipeline"):
+
+- Unticked (default): `float = real − reserved` (Reserved-status holds
+  only; Invoiced qty is shown in its own column but not subtracted).
+- Ticked: `float = real − (reserved + invoiced)`.
+
+"Reserved" / "Invoiced" columns are split from active
+`item_price_lot_reservations` by the invoice's current DMS status
+(`consumed_at` is null). Delivered invoices are already consumed and
+do not appear in either column.
+
+Excel export is the current on-screen rows (same filters, including the
+two tickboxes), plus a totals row for litres and value.
+
+Implemented (server): `GET /api/reports/warehouse-inventory` (filters:
+`warehouseId`, `hideZeroQty`, `includeInvoicedInFloat`; `Accept:
+application/xlsx` returns the spreadsheet). Read-only, no new tables.
+Implemented (webapp): Reports → Astrans DMS → Warehouse Inventory
+(`WarehouseInventory.tsx`), route `/reports/warehouse-inventory`.
+
 ## Statutory posting (Delivered)
 
 Customer owes **sell** amount. Inventory leaves at **lot** cost. Difference cannot vanish.
