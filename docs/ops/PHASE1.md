@@ -323,10 +323,60 @@ warehouse.
 
 ## Customers
 
-Start **Category B** (`risk_category`, default `B`, one of A/B/C/D). A–D engine
-needs **cleared** payments (not PDC received). Phase 1: status stays B unless
-a test "mark settled (cleared)" stub is used. Unpaid delivered invoices show
-on the invoice screen.
+Customer **risk grade** is stored on the existing `contacts.risk_category`
+column (`A` / `B` / `C` / `D`). It is **not** editable on the customer form
+(no manual override). Changing the grade never posts a journal — it is an
+ops label only.
+
+The grade is whatever the rules match **right now** (it can move up or
+down). A nightly job writes the column; the invoice form and Delivery Prep
+compute the same grade live from current unpaid invoices so the screen is
+not a day behind.
+
+**What counts as an unpaid invoice:** Delivered only (AR posts on
+Delivered), including pre-Phase-1 rows with no `dmsStatus` but a
+`deliveredAt` stamp. Pending / Reserved / Invoiced are not sales yet, so
+they do not count. Remaining due uses Bigcapital's invoice `dueAmount`
+(`total − payments − write-off − credits`). **Days Due** is calendar days
+from the **invoice date** to today (not the due date).
+
+**Phase 1 "cleared"** = a **Receive Payment** applied to the invoice
+(immediately Dr Bank/Cash, Cr AR). A post-dated cheque is **not** treated
+as cleared here — that is Phase 2 (see below).
+
+Evaluated **D → C → B → A**:
+
+| Grade | Condition |
+| --- | --- |
+| **D** | At least one unpaid invoice older than **90 days**, and total due **> 1,000,000 LKR** |
+| **C** | At least one unpaid invoice older than **90 days**, and total due **> 300,000 LKR** (and not D) |
+| **B** | More than **2** unpaid invoices older than **45 days**. Also the residual: 1–2 invoices older than 45 days that are not C/D (those customers are not "fully cleared within 45 days") |
+| **A** | No unpaid Delivered invoice older than 45 days (including nothing outstanding) |
+
+Implemented (server): `computeCustomerRiskCategory`,
+`CustomerDueInvoicesService`, `GET /api/customers/:id/due-invoices`
+(`excludeInvoiceId` skips the invoice currently being edited),
+`RecalculateCustomerRiskJob` (`0 2 * * *` Asia/Colombo) writing
+`contacts.risk_category`. The grade is not on the create/edit customer DTO
+(unknown fields are stripped), so it cannot be set from the form.
+
+Implemented (webapp): on **New/Edit Invoice**, a scrollable panel in the
+header (right of customer/date fields) shows the live grade plus a table
+of Invoice No / Invoice date / Due Amount / Days Due. **Class D** opens a
+warning; **Proceed** dismisses it. **Delivery Prep** shows the grade next
+to the customer name, the same due table under each row, and the same
+Class D Proceed warning when a Class D customer is on the list.
+
+### Phase 2 — post-dated (PD) cheques
+
+Bigcapital **Receive Payment** posts cash/bank immediately. There is no
+PDC document (cheque received, not yet banked, AR still open until
+deposit). That is a real gap for Sri Lankan collections. Phase 2 needs a
+PDC workflow (receive cheque without clearing AR; bank it later to post
+Dr Bank / Cr AR; bounce/return). Until then, "cleared within 45 days /
+at least give a cheque within 45 days" is approximated by Receive
+Payment only — a cheque in hand that is not yet banked does **not**
+improve the customer's grade.
 
 ### Areas & Route Cities
 
