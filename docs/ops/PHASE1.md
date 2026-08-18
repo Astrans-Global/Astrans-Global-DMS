@@ -189,12 +189,12 @@ or on an **edit** of an existing Pending/Reserved/Invoiced invoice, bypassing
 runs the exact same reserve → consume → assign-number → sync-status sequence
 so a Delivered invoice can never end up without a number or with stock not
 actually decremented, no matter which button delivered it). Implemented
-(webapp): a "Status" pill + "Move to..." menu on the invoice form (shown as a
-plain non-interactive "Pending" tag before the invoice is first saved, since
-there's no id yet to call the status endpoint against) and a DMS Status
-column on the invoice list, both wired to that endpoint. Invoice numbering
-now uses the real per-area `YYMMM_ASTRANSQQ_XXXXX` format -- see "Invoice
-numbers" above (no longer Bigcapital's plain auto-numbering).
+(webapp): a "Status: ..." button + "Move to..." menu in the invoice form's
+top bar (see "Changing an invoice's DMS status" below for exactly where) and
+a DMS Status column on the invoice list, both wired to that endpoint.
+Invoice numbering now uses the real per-area `YYMMM_ASTRANSQQ_XXXXX` format
+-- see "Invoice numbers" above (no longer Bigcapital's plain
+auto-numbering).
 
 ## Lots / GRN
 
@@ -333,7 +333,39 @@ selector, unrelated to Astrans DMS.
 Area only lives on the **customer** (required at customer-create time — see
 "Areas & Route Cities" above); the invoice resolves it from
 `invoice.customer.area` purely to pick the right `invoice_number_code` at
-Invoiced/Delivered (see "Invoice numbers"). This was a deliberate scope
-decision, not an oversight — filtering the customer picker by a
-invoice-level Area dropdown was considered but dropped since every customer
-already has exactly one Area of its own.
+Invoiced/Delivered (see "Invoice numbers"). Nothing is stored on the invoice
+for Area.
+
+The invoice form does have an **Area filter** dropdown next to the customer
+picker (added 2026-08-18) — but it's webapp-only convenience, not a form
+field: picking an Area there just narrows the Customer dropdown's option
+list to that Area's customers, to make a long customer list quicker to
+search; it's not submitted with the invoice and has no server-side effect.
+Implemented (webapp): `InvoiceFormAreaFilter` in
+`InvoiceFormHeaderFields.tsx` (local `useState`, filters the `customers`
+array on `customer.area_id` before handing it to `CustomersSelect`).
+
+## Changing an invoice's DMS status (Pending/Reserved/Invoiced/Delivered)
+
+The "Status: ..." button lives in the invoice form's **top bar**, top-right
+(next to the Warehouse/Branch pickers if those features are on) — click it
+to open a menu of the other statuses to move to (see "Status pipeline"
+above for what each transition does). It only becomes clickable once the
+invoice has been saved at least once (brand-new/unsaved invoices show a
+disabled "Status: Pending" button, since there's no invoice id yet to call
+the status endpoint against) and is permanently disabled once the invoice
+is **Delivered** (that transition is final in phase 1). This control used
+to live in a small bar above the item entries table, which was easy to
+miss — moved into the top bar 2026-08-18 for visibility. Implemented
+(webapp): `InvoiceDmsStatusControl`, mounted from `InvoiceFormTopBar`.
+
+## Renaming a warehouse (including "Primary")
+
+Right-clicking a warehouse box under **Preferences → Warehouses** always
+opened an Edit/Delete/Make Primary context menu (including for "Primary"
+itself — nothing stops the primary warehouse's `name` from being edited,
+Bigcapital just doesn't call it out anywhere), but right-click is not
+discoverable, so a small "..." button was added to the top-right corner of
+every warehouse box (2026-08-18) that opens the same menu on a normal
+click. Implemented (webapp): `WarehousesGridItemBox` /
+`WarehouseContextMenu` in `Preferences/Warehouses/components.tsx`.
