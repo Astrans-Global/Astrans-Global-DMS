@@ -473,3 +473,22 @@ discoverable, so a small "..." button was added to the top-right corner of
 every warehouse box (2026-08-18) that opens the same menu on a normal
 click. Implemented (webapp): `WarehousesGridItemBox` /
 `WarehouseContextMenu` in `Preferences/Warehouses/components.tsx`.
+
+## Gotcha: stock "Customize Report" crashed the page
+
+Clicking **Customize Report** on Bigcapital's own financial reports
+(Balance Sheet, P&L, customers, items, etc.) opened the filter drawer and
+then hit the "Sorry about that" error screen. Two stock bugs:
+
+1. The dropdowns in that drawer (`FSelect` / `FMultiSelect`) were given
+   `undefined` instead of an array while the customer/item/vendor list was
+   nested under a different response key. Blueprint then crashed on
+   `items.find` / `items.filter`.
+2. P&L, Vendor Transactions, and Vendor Balance Summary always called
+   "close drawer" on that button, so Customize never toggled open.
+
+Fixed in source (not a hashed-JS patch): `asSelectItems` plus empty-array
+guards on `FSelect`/`FMultiSelect`, date values coerced for `FDateInput`,
+and those three action bars now toggle. The error screen itself now shows
+the Astrans mark + "Astrans", matching the login footer (light and dark).
+
