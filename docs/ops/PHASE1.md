@@ -7,7 +7,9 @@ Reset point: git tag `pre-ops-phase1` (`3e92fee`). Revert: `git checkout pre-ops
 
 ## Secondary P&L
 
-VAT-inclusive nets:
+Ex-VAT nets (VAT is a pass-through tax, not trading profit, so it's excluded
+from both sides of the comparison — see "Statutory posting" below for how
+the VAT-inclusive customer/GL amounts still balance separately):
 
 ```text
 lot_net  = lot_list × (1 − lot_discount%)
@@ -18,7 +20,23 @@ invoice_pnl = sum(line_pnl)
 
 Example: lot 100 @ 10% (net 90), sell 5 × 120 @ 10% (net 108) → **+90**, not +40.
 
-Green = profit, red = loss. Report filters: warehouse, area, date range. Show invoice numbers, line/invoice P&L, and total.
+Green = profit, red = loss. Report filters: warehouse, area, date range.
+Shows one row per **Delivered** invoice only (Pending/Reserved/Invoiced
+aren't real sales yet), with invoice P&L and a grand total.
+
+Implemented (server): `sale_invoice_line_pnls` (one row per lot-picked
+invoice line: `lot_net_per_unit`, `sell_net_per_unit`, `quantity`,
+`line_pnl`), `RecordSaleInvoiceLinePnlService` (recomputes/replaces a
+Delivered invoice's rows — `sell_net_per_unit` reuses
+`computeItemPriceLotUnitCosts`, the same header-discount-allocation math as
+the GRN side, just applied to the invoice's own header discount instead of
+the bill's), `SaleInvoiceWriteLinePnlSubscriber` (same
+delivered/created-delivered/edited-while-delivered/deleted gating as the
+lot-reservation subscriber), `GET /api/reports/secondary-pnl` (filters:
+`warehouseId`, `areaId`, `dateFrom`, `dateTo`; joins to the invoice, its
+customer, and the customer's area). Implemented (webapp): Reports → Astrans
+DMS → Secondary P&L page (`SecondaryPnl.tsx`), green/red P&L cells, totals
+footer.
 
 ## Statutory posting (Delivered)
 
@@ -62,21 +80,44 @@ Pending / Reserved / Invoiced: **no GL**.
   triple differs from an existing lot for the same item + warehouse;
   otherwise its quantity merges into that lot.
 - Every delivered invoice **stores** VAT internally (header + lines) for later 1B filing.
-- Invoice unit-price display (same grand total either way — see Secondary P&L formula, which always uses VAT-inclusive `lot_net`/`sell_net`):
-  - **Non-VAT invoice** (no customer TIN): unit price = VAT-**inclusive** final price
-    (`list_price_excl_vat × (1 − discount%) × (1 + vat%)`), discount shown
-    separately; no VAT line.
-  - **VAT invoice** (customer has TIN): unit price = VAT-**excluded** final
-    price (`list_price_excl_vat × (1 − discount%)`), with VAT computed on the
-    bill subtotal and shown as a separate total line.
-  - Accounts Payable, COGS and Vendor/Customer Due always use the
-    VAT-inclusive figure regardless of which invoice print format is used.
+- **Every invoice is always calculated/posted internally as VAT-inclusive**
+  (subtotal + VAT = total), regardless of whether the customer is
+  VAT-registered. "Non-VAT invoice" vs. "VAT invoice" is purely a **print
+  format** choice made at PDF/Excel output time (see "Invoice numbers" and
+  the future `invoice_templates` task) — not a different internal
+  calculation:
+  - Every invoice line's stored `rate` is always the VAT-**excluded** list
+    price (same as the item price-lot it was sold from); VAT is always
+    added once, on the invoice subtotal, via the single invoice-level tax
+    rate below.
+  - **VAT invoice** print (customer has TIN): shows that same VAT-excluded
+    unit price as-is, with VAT broken out as a separate total line.
+  - **Non-VAT invoice** print (no customer TIN): unit price is **grossed
+    up** for display (`rate × (1 − discount%) × (1 + vat%)`), VAT is not
+    broken out — the printed grand total is identical either way.
+  - Accounts Payable/Receivable, COGS and Customer Due always use the
+    VAT-inclusive figure, independent of which print format was used.
+- The Invoice form has the same single **invoice-level "Tax rate"
+  selector** in the totals footer as the Bill form (dropdown of the org's
+  saved Tax Rates, stamped onto every line under the hood) — never a
+  per-line tax rate, and the "Amounts are" picker is likewise replaced with
+  a static "Exclusive of Tax" notice. Mirrors the Bill-side reasoning
+  exactly (see `ComputeItemPriceLotCost.ts` assumptions).
 - Bills always compute tax as **exclusive-of-tax** — Bigcapital's own
-  "Amounts are" inclusive/exclusive picker (present on Estimates/Invoices/
-  Credit Notes) is replaced on the Bill form with a static "Exclusive of
-  Tax" notice; it is not user-editable, because switching a bill to
+  "Amounts are" inclusive/exclusive picker (present on Estimates/Credit
+  Notes) is replaced on the Bill and Invoice forms with a static "Exclusive
+  of Tax" notice; it is not user-editable, because switching to
   inclusive-of-tax would desync `ComputeItemPriceLotCost.ts`, which always
-  assumes an exclusive-tax GRN line.
+  assumes an exclusive-tax line.
+- `sale_invoice_vat_records` (one row per **Delivered** invoice:
+  `sale_invoice_id`, `invoice_no`, `invoice_date`, `customer_id`,
+  `is_vat_customer` — snapshot of whether the customer had a TIN at
+  delivery time, `vat_rate_percent`, `taxable_amount`, `vat_amount`) is the
+  output-VAT mirror of `bill_vat_records`, kept in sync by
+  `RecordSaleInvoiceVatFromInvoiceService` on invoice
+  delivered/created-delivered/edited-while-delivered/deleted. Only
+  Delivered invoices are recorded (Pending/Reserved/Invoiced aren't real
+  sales yet).
 - `bill_vat_records` (one row per opened Bill/GRN: `bill_id`, `bill_number`,
   `bill_date`, `vendor_id`, `vat_rate_percent`, `taxable_amount`,
   `vat_amount`) is a purpose-built snapshot table for the future VAT module
@@ -91,9 +132,35 @@ Pending / Reserved / Invoiced: **no GL**.
 
 `YYMMM_ASTRANS{QQ}_{XXXXX}` e.g. `26AUG_ASTRANS01_10001`.
 
-- Per-area `QQ` and sequence starting at **10001**.
-- Assigned at **Invoiced** (or at **Delivered** if skipped).
-- Revert from Invoiced **burns** the number; next Invoiced gets a new one.
+- Per-area `QQ` (`customer_areas.invoice_number_code`, resolved from the
+  invoice's **customer's** area -- there's no separate Area field on the
+  invoice itself) and sequence starting at **10001**
+  (`customer_areas.next_invoice_number`), never reset/padded beyond that.
+- `YYMMM` is always **today's** date -- the date the number is actually
+  generated -- not necessarily the same as the Invoice Date fixed later at
+  Delivered.
+- `invoice_no` is **left blank** through Pending/Reserved (Bigcapital's own
+  `sales_invoices` auto-increment setting is no longer used for new
+  invoices -- see "Gotcha" below). Assigned at **Invoiced** (or at
+  **Delivered** if Invoiced was skipped).
+- Revert from Invoiced back to Pending/Reserved **burns** the number (blanks
+  `invoice_no`, sequence does not roll back); next Invoiced/Delivered gets a
+  new one. Invoiced -> Delivered keeps the same number.
+- Errors if the customer has no Area, or the Area has no `invoice_number_code`
+  set yet, at the moment a number would be assigned.
+
+Implemented (server): `GenerateSaleInvoiceNumberService`
+(`assignNumberIfMissing` / `burnNumber`, both transactional and row-locking
+the area to avoid two invoices racing for the same sequence number), called
+from `InvoiceDmsStatusService.setStatus` on every status transition.
+`CommandSaleInvoiceDTOTransformer` no longer calls Bigcapital's
+`SaleInvoiceIncrement`/`AutoIncrementOrdersService` nor requires
+`invoiceNo` to be present -- both are effectively dormant for Sale Invoices
+now (kept registered/untouched to avoid breaking DI, just unused).
+Implemented (webapp): `InvoiceFormInvoiceNumberField` is now a read-only
+display (was a free-text/auto-increment field) showing the assigned number
+or an italic "Assigned automatically once moved to \"Invoiced\"" hint while
+blank.
 
 ## Status pipeline
 
@@ -118,8 +185,8 @@ own native deliver action so GL/inventory post exactly as they already do),
 sync on invoice edit/delete/native-deliver). Implemented (webapp): a
 "Status" pill + "Move to..." menu on the invoice form and a DMS Status
 column on the invoice list, both wired to that endpoint. Invoice numbering
-still uses Bigcapital's normal auto-numbering for now (per-area format is a
-separate later task).
+now uses the real per-area `YYMMM_ASTRANSQQ_XXXXX` format -- see "Invoice
+numbers" above (no longer Bigcapital's plain auto-numbering).
 
 ## Lots / GRN
 
@@ -187,15 +254,24 @@ it, but these fields are customer-facing only for now):
 
 - **Call Name** — this *is* Bigcapital's existing `display_name` field, just
   relabelled on the customer form/list (the name that prints on invoices).
-- **Contact Person** — single free-text name field (optional).
+  There's no separate "Contact Person" field — the existing Salutation +
+  First/Last Name fields cover that.
+- **Customer Code** — auto-generated on create as `{AreaCode}-{seq}` (e.g.
+  `QQ-0001`), one running sequence per Area (`customer_areas.next_customer_number`,
+  independent of the invoice-number sequence). Read-only on the form; never
+  accepted from the client, always stamped server-side inside the same
+  transaction as the insert.
 - **Phone 1 / Phone 2** — Bigcapital's existing `work_phone` / `personal_phone`
-  fields, relabelled (both optional).
+  fields, relabelled (both optional). The separate phone fields on the
+  Billing/Shipping address sections were removed (redundant with these).
 - **VAT / TIN Number** (`tin_number`) — optional, must be exactly 9 digits
   when provided; also determines VAT vs non-VAT invoice printing (see "VAT"
   above).
 - **Address line 3** (`billing_address3` / `shipping_address3`) — third line
   added alongside Bigcapital's existing address line 1/2 fields, both
-  billing and shipping.
+  billing and shipping. Shipping address has a "Same as billing address"
+  checkbox that mirrors + locks the shipping fields to the billing ones
+  while ticked (webapp-only convenience, not a stored field).
 
 No backfill was needed — the customers list was empty at rollout time, so
 Area/Route City are enforced as required from the very first customer
@@ -204,3 +280,29 @@ created.
 ## Books adapter
 
 Idempotent `external_id`. Store Bigcapital document ids on DMS GRN / delivered invoice. Failures do not invent silent journals.
+
+## Gotcha: DTO field naming (server)
+
+The global `SerializeInterceptor` (`packages/server/src/common/interceptors/serialize.interceptor.ts`)
+already rewrites every incoming request body/query key from snake_case to
+camelCase **before** `ValidationPipe`/`class-transformer` binds the DTO. New
+DTO fields must therefore just be named in plain camelCase
+(`areaId: number`) — **never** add `@Expose({ name: 'area_id' })` to "bridge"
+snake_case, since by that point the snake_case key no longer exists and the
+field will silently come back `undefined`. This exact mistake broke Route
+City creation and Item category/subcategory/pack-size assignment for a
+while (fixed 2026-08-17) — don't reintroduce it.
+
+## Gotcha: Sale Invoice numbering is no longer Bigcapital's auto-increment
+
+The `sales_invoices` settings group (`next_number` / `number_prefix` /
+`auto_increment`, Settings → Sales → Invoices) and its
+`SaleInvoiceIncrement` / `AutoIncrementOrdersService` plumbing still exist
+and still get bumped on every invoice create (`SaleInvoiceAutoIncrementSubscriber`)
+but are otherwise **dead** for Sale Invoices — don't be misled by that
+settings screen still being there, or by that counter still incrementing.
+The real number now always comes from `GenerateSaleInvoiceNumberService`
+(see "Invoice numbers"). If a customer has no Area, or their Area has no
+`invoice_number_code` set, moving an invoice to Invoiced/Delivered fails
+loudly (`CUSTOMER_HAS_NO_AREA` / `AREA_MISSING_INVOICE_CODE`) rather than
+silently falling back to the old numbering.
