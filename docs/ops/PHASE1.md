@@ -181,9 +181,17 @@ posting), `item_price_lot_reservations` table (mirrors
 `InvoiceDmsStatusService` + `PUT /api/sale-invoices/:id/dms-status`
 (Reserved/Invoiced hold stock via reservations; Delivered drives Bigcapital's
 own native deliver action so GL/inventory post exactly as they already do),
-`InvoiceLotReservationSyncSubscriber` (keeps reservations/`dms_status` in
-sync on invoice edit/delete/native-deliver). Implemented (webapp): a
-"Status" pill + "Move to..." menu on the invoice form and a DMS Status
+`InvoiceLotReservationSyncSubscriber` (keeps reservations/`dms_status`/the
+invoice number in sync on invoice edit/delete/native-deliver -- Bigcapital's
+own "Save and Deliver" button can reach `deliveredAt` directly on **create**
+or on an **edit** of an existing Pending/Reserved/Invoiced invoice, bypassing
+`InvoiceDmsStatusService` entirely; this subscriber detects both cases and
+runs the exact same reserve → consume → assign-number → sync-status sequence
+so a Delivered invoice can never end up without a number or with stock not
+actually decremented, no matter which button delivered it). Implemented
+(webapp): a "Status" pill + "Move to..." menu on the invoice form (shown as a
+plain non-interactive "Pending" tag before the invoice is first saved, since
+there's no id yet to call the status endpoint against) and a DMS Status
 column on the invoice list, both wired to that endpoint. Invoice numbering
 now uses the real per-area `YYMMM_ASTRANSQQ_XXXXX` format -- see "Invoice
 numbers" above (no longer Bigcapital's plain auto-numbering).
@@ -306,3 +314,26 @@ The real number now always comes from `GenerateSaleInvoiceNumberService`
 `invoice_number_code` set, moving an invoice to Invoiced/Delivered fails
 loudly (`CUSTOMER_HAS_NO_AREA` / `AREA_MISSING_INVOICE_CODE`) rather than
 silently falling back to the old numbering.
+
+## Gotcha: the Warehouse picker needs Bigcapital's "Warehouses" feature turned on
+
+Bigcapital ships multi-warehouse support behind a per-org on/off switch
+(`features.warehouses` setting, default **off**). While it's off, the
+Warehouse selector is hidden everywhere (Bill/Invoice top bar included) —
+this is stock Bigcapital behaviour, not an Astrans DMS bug, but it means a
+brand-new org (like this one) needs a one-time, in-app activation step
+before the invoice-lot picker/reservations (which are scoped to the
+invoice's own warehouse) become usable: **Preferences → Warehouses →
+Activate** (creates a "Primary" warehouse automatically). No code/deploy
+involved. Same on/off switch also independently gates the Branches
+selector, unrelated to Astrans DMS.
+
+## Note: there is no separate "Area" field on the invoice itself
+
+Area only lives on the **customer** (required at customer-create time — see
+"Areas & Route Cities" above); the invoice resolves it from
+`invoice.customer.area` purely to pick the right `invoice_number_code` at
+Invoiced/Delivered (see "Invoice numbers"). This was a deliberate scope
+decision, not an oversight — filtering the customer picker by a
+invoice-level Area dropdown was considered but dropped since every customer
+already has exactly one Area of its own.
