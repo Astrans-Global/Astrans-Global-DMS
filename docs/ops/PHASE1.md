@@ -192,9 +192,7 @@ Pending / Reserved / Invoiced: **no GL**.
 - The old "Invoice Message" field is labelled **Narration** and prints in
   the Narration slot. A separate **Note** field prints as
   "Additional Information if any".
-- Download (not print): once the invoice is **Invoiced or Delivered** and
-  has a number, Excel and PDF buttons appear to the right of the Status
-  dropdown. PDF is the filled spreadsheet converted through Gotenberg
+- Download (not print): Excel and PDF buttons sit **above the outstanding-invoices panel** in the invoice header (the empty zone to the right of customer/date fields). They are visible on every status (Pending/Reserved/Invoiced/Delivered) but **disabled** until the invoice is **Invoiced or Delivered** and has a number. PDF is the filled spreadsheet converted through Gotenberg
   LibreOffice (grid lines without borders are hidden). Default format
   follows the customer's TIN; the user can override VAT vs Non-VAT.
 - The Invoice form has the same single **invoice-level "Tax rate"
@@ -350,8 +348,8 @@ Evaluated **D → C → B → A**:
 | --- | --- |
 | **D** | At least one unpaid invoice older than **90 days**, and total due **> 1,000,000 LKR** |
 | **C** | At least one unpaid invoice older than **90 days**, and total due **> 300,000 LKR** (and not D) |
-| **B** | More than **2** unpaid invoices older than **45 days**. Also the residual: 1–2 invoices older than 45 days that are not C/D (those customers are not "fully cleared within 45 days") |
-| **A** | No unpaid Delivered invoice older than 45 days (including nothing outstanding) |
+| **B** | More than **2** unpaid invoices older than **60 days**. Also the residual: 1–2 invoices older than 60 days that are not C/D (those customers are not "fully cleared within 60 days") |
+| **A** | No unpaid Delivered invoice older than 60 days (including nothing outstanding) |
 
 Implemented (server): `computeCustomerRiskCategory`,
 `CustomerDueInvoicesService`, `GET /api/customers/:id/due-invoices`
@@ -360,12 +358,13 @@ Implemented (server): `computeCustomerRiskCategory`,
 `contacts.risk_category`. The grade is not on the create/edit customer DTO
 (unknown fields are stripped), so it cannot be set from the form.
 
-Implemented (webapp): on **New/Edit Invoice**, a scrollable panel in the
-header (right of customer/date fields) shows the live grade plus a table
-of Invoice No / Invoice date / Due Amount / Days Due. **Class D** opens a
-warning; **Proceed** dismisses it. **Delivery Prep** shows the grade next
-to the customer name, the same due table under each row, and the same
-Class D Proceed warning when a Class D customer is on the list.
+Implemented (webapp): on **New/Edit Invoice**, Excel/PDF sit above a
+scrollable panel that fills the header space to the right of the
+customer/date fields (live grade + Invoice No / Invoice date / Due Amount /
+Days Due). **Class D** opens a warning; **Proceed** dismisses it.
+**Delivery Prep** shows the grade next to the customer name, the same due
+table under each row, and the same Class D Proceed warning when a Class D
+customer is on the list.
 
 ### Phase 2 — post-dated (PD) cheques
 
@@ -373,8 +372,8 @@ Bigcapital **Receive Payment** posts cash/bank immediately. There is no
 PDC document (cheque received, not yet banked, AR still open until
 deposit). That is a real gap for Sri Lankan collections. Phase 2 needs a
 PDC workflow (receive cheque without clearing AR; bank it later to post
-Dr Bank / Cr AR; bounce/return). Until then, "cleared within 45 days /
-at least give a cheque within 45 days" is approximated by Receive
+Dr Bank / Cr AR; bounce/return). Until then, "cleared within 60 days /
+at least give a cheque within 60 days" is approximated by Receive
 Payment only — a cheque in hand that is not yet banked does **not**
 improve the customer's grade.
 
@@ -508,10 +507,10 @@ is **Delivered** (that transition is final in phase 1). This control used
 to live in a small bar above the item entries table, which was easy to
 miss — moved into the top bar 2026-08-18 for visibility. Implemented
 (webapp): `InvoiceDmsStatusControl`, mounted from `InvoiceFormTopBar`.
-Once the invoice is Invoiced or Delivered (and has a number), **Excel**
-and **PDF** download buttons for the VAT / Non-VAT statutory invoice
-appear immediately to the right of that Status dropdown
-(`InvoiceStatutoryDownload`).
+**Excel** and **PDF** for the VAT / Non-VAT statutory invoice sit above
+the outstanding-invoices panel in the form header (`InvoiceStatutoryDownload`).
+They show on every status; they are only clickable once the invoice is
+Invoiced or Delivered and has a number.
 
 ## Renaming a warehouse (including "Primary")
 
