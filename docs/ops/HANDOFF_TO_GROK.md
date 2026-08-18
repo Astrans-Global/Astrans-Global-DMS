@@ -210,9 +210,11 @@ shifted):
 
 - **Customer risk category engine** — A/B/C/D categories that
   auto-upgrade/downgrade based on payment timing.
-- **VAT / Non-VAT invoice PDF & Excel print formats** matching the user's
-  sample files (ask the user for those samples again if you don't have
-  them in context — don't guess the layout).
+
+VAT / Non-VAT invoice Excel + PDF download (matching
+`resources/VAT INVOICE FORMAT.xlsx` and
+`resources/NON VAT INVOICE FORMAT.xlsx`) is implemented — see
+`docs/ops/PHASE1.md` ("VAT").
 
 Warehouse inventory report was built after this handoff (Reports →
 Astrans DMS → Warehouse Inventory) — see `docs/ops/PHASE1.md`

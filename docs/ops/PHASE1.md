@@ -161,21 +161,42 @@ Pending / Reserved / Invoiced: **no GL**.
 - Every delivered invoice **stores** VAT internally (header + lines) for later 1B filing.
 - **Every invoice is always calculated/posted internally as VAT-inclusive**
   (subtotal + VAT = total), regardless of whether the customer is
-  VAT-registered. "Non-VAT invoice" vs. "VAT invoice" is purely a **print
-  format** choice made at PDF/Excel output time (see "Invoice numbers" and
-  the future `invoice_templates` task) — not a different internal
+  VAT-registered. "Non-VAT invoice" vs. "VAT invoice" is purely a **download
+  format** choice made at Excel/PDF output time — not a different internal
   calculation:
   - Every invoice line's stored `rate` is always the VAT-**excluded** list
-    price (same as the item price-lot it was sold from); VAT is always
-    added once, on the invoice subtotal, via the single invoice-level tax
-    rate below.
-  - **VAT invoice** print (customer has TIN): shows that same VAT-excluded
-    unit price as-is, with VAT broken out as a separate total line.
-  - **Non-VAT invoice** print (no customer TIN): unit price is **grossed
-    up** for display (`rate × (1 − discount%) × (1 + vat%)`), VAT is not
-    broken out — the printed grand total is identical either way.
-  - Accounts Payable/Receivable, COGS and Customer Due always use the
-    VAT-inclusive figure, independent of which print format was used.
+    price (same as the item price-lot it was sold from).
+  - Line discount is a **percentage**. The line net is
+    `rate × (1 − line discount%) × qty`.
+  - Invoice-level discount is a **percentage only** (the old fixed-amount
+    toggle is gone). It is applied to the line-net subtotal.
+  - **VAT is calculated after that header discount**, not before:
+    taxable = subtotal − header discount; VAT = taxable × the invoice's
+    selected tax rate (from Preferences → Tax Rates, never hardcoded).
+    The same figure is posted to the VAT payable account, stored on
+    `sale_invoice_vat_records`, and shown on the statutory invoice.
+  - **VAT invoice** download (default when the customer has a TIN): shows
+    the stored VAT-excluded unit price, with VAT broken out as
+    `VAT Amount (Total Value of Supply @X%)` where X is the live rate.
+  - **Non-VAT invoice** download (default when the customer has no TIN):
+    unit price on the sheet is `rate × (1 + VAT%)`; the Excel formula
+    still applies the line discount. VAT is not broken out as a total
+    line. The printed/downloaded grand total is the VAT-inclusive figure
+    either way.
+  - Accounts Receivable, COGS and Customer Due always use the
+    VAT-inclusive figure, independent of which download format was used.
+- An invoice can have **at most 9 item lines** (the statutory Excel
+  templates have 9 item rows).
+- **Mode of Payment** on the invoice form is a dropdown: CASH, BANK, or
+  CREDIT (replaces the unused Stripe "Payment Options" picker).
+- The old "Invoice Message" field is labelled **Narration** and prints in
+  the Narration slot. A separate **Note** field prints as
+  "Additional Information if any".
+- Download (not print): once the invoice is **Invoiced or Delivered** and
+  has a number, Excel and PDF buttons appear to the right of the Status
+  dropdown. PDF is the filled spreadsheet converted through Gotenberg
+  LibreOffice (grid lines without borders are hidden). Default format
+  follows the customer's TIN; the user can override VAT vs Non-VAT.
 - The Invoice form has the same single **invoice-level "Tax rate"
   selector** in the totals footer as the Bill form (dropdown of the org's
   saved Tax Rates, stamped onto every line under the hood) — never a
@@ -437,6 +458,10 @@ is **Delivered** (that transition is final in phase 1). This control used
 to live in a small bar above the item entries table, which was easy to
 miss — moved into the top bar 2026-08-18 for visibility. Implemented
 (webapp): `InvoiceDmsStatusControl`, mounted from `InvoiceFormTopBar`.
+Once the invoice is Invoiced or Delivered (and has a number), **Excel**
+and **PDF** download buttons for the VAT / Non-VAT statutory invoice
+appear immediately to the right of that Status dropdown
+(`InvoiceStatutoryDownload`).
 
 ## Renaming a warehouse (including "Primary")
 
