@@ -431,6 +431,63 @@ a lot is picked). The form uses the same overlay as invoices:
 - Statutory download is enabled once the credit note is opened and
   numbered.
 
+## Estimates
+
+Bigcapital's existing Estimates module is the overlay, not a new document
+type. An estimate still posts **nothing** to GL or stock. It is treated
+like a **Pending** invoice on the form (lots, 9-line cap, warehouse, area
+filter, invoice-level tax rate, header discount %). Differences from an
+invoice:
+
+- Download is allowed as soon as the estimate is **saved** (no invoice
+  number is required).
+- Same VAT / Non-VAT Excel templates as invoices. Title is **TAX ESTIMATE**
+  / **SALE ESTIMATE**. Invoice number and due date print as **N/A**. Mode
+  of Payment is blank.
+- Due date is shown but disabled and always equals the estimate date.
+- Notes default to: "The prices outlined in this quotation are subject to
+  change and are valid for acceptance within 14 days." That text prints
+  unless the user changes it.
+- Class / outstanding-invoices panel is hidden on the estimate (it appears
+  on the invoice after convert).
+- **Save and Deliver** is hidden. Save only stores the estimate (draft).
+- **Send to pending** opens a new invoice form filled from the estimate
+  (customer, warehouse, tax, lots, discounts, notes). Invoice date defaults
+  to today and is editable. The user reviews and Save's as a **Pending**
+  invoice (no number, no stock hold, no GL). One estimate → one invoice.
+  Stock Convert to Invoice is renamed to Send to pending so it cannot
+  deliver.
+- Implemented (server): `tax_amount_withheld` on `sales_estimates`, VAT
+  after header discount stamped like invoices, `GET
+  /api/sale-estimates/:id/statutory-invoice` with `dueDateLabel: 'N/A'`.
+  Implemented (webapp): estimate form overlay + `EstimateStatutoryDownload`.
+
+## Quotations
+
+A quotation is a **price list for a prospect**, not a customer document
+and not an estimate. It never converts to an invoice, never posts GL, and
+never moves stock. Company name / Address To / Address Line 1 / Address
+Line 2 are typed boxes (no customer picker).
+
+- Numbering is **QTN-0001**, company-wide, assigned on save, never reused
+  if a quotation is deleted.
+- Same item table as invoices (price lots, VAT selector) with a **12-line**
+  cap to fill `QUOTATION TEMPLATE.xlsx` rows A21–A32.
+- Header discount and adjustment are forced to zero. Note, Narration,
+  Terms, Mode of Payment, attachments, Area, Due Date, Status, and the
+  outstanding-invoices panel are hidden.
+- Download is always Non-VAT (no VAT/Non-VAT selector). Unit price on the
+  sheet is VAT-included (`rate × (1 + VAT%)`). Printed columns: item code,
+  item name, unit price, discount % (Excel percent format so After Price
+  `H*(100%-I)` still works). Quantity is not printed. Quotation number
+  goes to cell **I9**. The 14-day validity sentence is already printed on
+  the template.
+- Buttons: Save, Clear, Cancel only.
+- Implemented (server): `sales_quotations` table, `SaleQuotationsModule`
+  (no GL/inventory subscribers), `GET
+  /api/sale-quotations/:id/statutory-invoice`. Implemented (webapp):
+  Sales → Quotations.
+
 ### Phase 2 — post-dated (PD) cheques
 
 Bigcapital **Receive Payment** posts cash/bank immediately. There is no
