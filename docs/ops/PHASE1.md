@@ -124,10 +124,11 @@ Customer owes **sell** amount. Inventory leaves at **lot** cost. Difference cann
 | | Debit | Credit |
 |--|-------|--------|
 | AR | what customer owes (VAT-incl / VAT-excl+VAT as configured) | |
-| Sales | | lot net (ex-VAT equivalent as Books tax setup requires) |
+| Sales | | sell amount excluding tax (after discounts) |
 | Inventory / COGS | COGS at lot cost | Inventory at lot cost |
-| VAT output | | output VAT on the **sell** tax base (always stored) |
-| **4410 Selling price variance** | loss | gain (`invoice_pnl`) |
+| VAT output | | output VAT on the **sell** tax base after header discount |
+
+**4410 Selling price variance is not posted.** Profit is already Sales minus COGS. Adding 4410 on top of those journals would unbalance the Trial Balance. Secondary P&L remains the ops view of the same margin.
 
 Commission income is **phase 2** (supplier cheque). Do not mix into this posting.
 
@@ -364,7 +365,71 @@ customer/date fields (live grade + Invoice No / Invoice date / Due Amount /
 Days Due). **Class D** opens a warning; **Proceed** dismisses it.
 **Delivery Prep** shows the grade next to the customer name, the same due
 table under each row, and the same Class D Proceed warning when a Class D
-customer is on the list.
+customer is on the list. The **Customers** list has a view-only **Class**
+column (A/B/C/D badge).
+
+## Items (buy/sell price boxes)
+
+Item **accounts** (Sales income, COGS, Inventory) stay on the item form —
+Delivered invoices and closed receipts post from them.
+
+Item **buy price**, **sell price**, and **item-level Tax Rate** boxes are
+**hidden**. They are leftover single numbers, not the Astrans pricing
+system. Real buy prices live on GRN price lots (list + discount % + VAT).
+Real sell prices live on the invoice/receipt line when a lot is picked.
+New items save buy/sell as 0. Do not enter discount % / VAT on the item
+itself — that would duplicate lots.
+
+## Sales receipts (cash sales)
+
+A sale receipt is the same commercial document as a sale invoice, except
+payment is taken at that moment:
+
+- Same line editor (price lots, 9-line cap), invoice-level tax rate,
+  header discount %, Narration / Note, warehouse, area filter, statutory
+  Excel/PDF.
+- **Mode of Payment** is CASH or BANK only (no CREDIT).
+- **Due date** is shown but disabled and always equals the receipt date.
+  The downloaded statutory sheet prints that same date in the due-date
+  slot.
+- Deposit account stays — that is the cash/bank GL account (Dr deposit,
+  Cr Sales, Cr VAT payable on Close). No AR.
+- Lots are consumed when the receipt is **closed** (no Pending/Reserved/
+  Invoiced pipeline). Draft receipts do not hold stock. Closing a draft
+  from the receipts list also posts inventory and the cash/VAT journals.
+- Statutory download is enabled once the receipt is closed and numbered.
+
+## Warehouse transfers
+
+Bigcapital's Inventory → Warehouse Transfers screen is used. Each line
+must pick the **source price lot**. On **Initiate**, that lot's real qty
+decreases. On **Transferred**, quantity merges into (or creates) a lot
+at the destination warehouse with the same (list, discount %, VAT %)
+triple. Safe to use with one warehouse today.
+
+## Credit notes
+
+A credit note is the reverse of a sale invoice (reduces AR, restocks if
+a lot is picked). The form uses the same overlay as invoices:
+
+- Same line editor (optional price lots, 9-line cap), invoice-level tax
+  rate, header discount %, Narration / Note, warehouse, area filter,
+  statutory Excel/PDF.
+- **Due date** is shown but disabled and always equals the credit-note
+  date. The downloaded sheet prints that same date in the due-date slot.
+- There is no Mode of Payment — a credit note is not a collection.
+- Downloaded title is **TAX CREDIT NOTE** (VAT) or **CREDIT NOTE**
+  (non-VAT).
+- VAT after header % discount is posted on **Open** as Dr VAT payable
+  (reverse of the invoice Cr VAT payable). Cr AR is the VAT-inclusive
+  total, so remaining credit to apply to invoices includes VAT.
+- The credit-note line editor has an optional **price lot** picker (lots
+  with zero float still show, so a fully sold batch can be restocked). If
+  the user picks a lot, opening the credit note puts that quantity back
+  onto the lot. If they skip the lot, only Bigcapital's average-cost
+  inventory moves.
+- Statutory download is enabled once the credit note is opened and
+  numbered.
 
 ### Phase 2 — post-dated (PD) cheques
 
