@@ -291,6 +291,12 @@ actually decremented, no matter which button delivered it). Implemented
 (webapp): a "Status: ..." button + "Move to..." menu in the invoice form's
 top bar (see "Changing an invoice's DMS status" below for exactly where) and
 a DMS Status column on the invoice list, both wired to that endpoint.
+The invoices **Table Views** dropdown is the same pipeline (Pending /
+Reserved / Invoiced / Delivered) plus payment views (Unpaid / Partially
+paid / Paid). Filter fields include DMS Status, Mode of Payment, and
+Warehouse -- not the old Bigcapital Draft/Delivered labels, which meant
+`delivered_at` and clashed with Astrans Delivered. List columns also show
+warehouse and Mode of Payment.
 Invoice numbering now uses the real per-area `YYMMM_ASTRANSQQ_XXXXX` format
 -- see "Invoice numbers" above (no longer Bigcapital's plain
 auto-numbering).
@@ -398,6 +404,8 @@ payment is taken at that moment:
   Invoiced pipeline). Draft receipts do not hold stock. Closing a draft
   from the receipts list also posts inventory and the cash/VAT journals.
 - Statutory download is enabled once the receipt is closed and numbered.
+- Receipts list Table Views: Draft, Closed, CASH, BANK. Filter and columns
+  include warehouse and Mode of Payment (CASH/BANK).
 
 ## Warehouse transfers
 
@@ -457,6 +465,10 @@ invoice:
   invoice (no number, no stock hold, no GL). One estimate → one invoice.
   Stock Convert to Invoice is renamed to Send to pending so it cannot
   deliver.
+- Estimates list Table Views: Draft, Delivered, Approved, Rejected,
+  **Sent to pending** (was "Invoiced"), Expired. Filter includes warehouse
+  and a Sent to pending status. The status column shows "Sent to pending"
+  once the estimate has been converted.
 - Implemented (server): `tax_amount_withheld` on `sales_estimates`, VAT
   after header discount stamped like invoices, `GET
   /api/sale-estimates/:id/statutory-invoice` with `dueDateLabel: 'N/A'`.
